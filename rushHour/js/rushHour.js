@@ -6,28 +6,96 @@
 
     const gameboard = $('#gameboard');
     const topBoard = $('#topBoard');
-    const SQUARE_SIZE = topBoard.width() / 6;
+    const levelDiv = $('#level');
+    const cardImg = $('#cardImg');
+
+    let SQUARE_SIZE = topBoard.width() / 6;
     let cars = [];
     let currentCar;
 
-    const blueCar = $(`<img src="images/blueCar2.png" class="cars" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="Blue Car">`);
-    const greenCar = $(`<img src="images/greenCar.png" class="cars" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="Green Car">`);
-    const redCar = $(`<img src="images/redCar.png" class="cars" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="Red Car">`);
-    const purpleCar = $(`<img src="images/purpleCar.png" class="cars" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="Purple Car">`);
-    const orangeCar = $(`<img src="images/orangeCar.png" class="cars" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="Orange Car">`);
-    const grayTruck = $(`<img src="images/grayTruck.png" class="cars" width="${SQUARE_SIZE}" height="${SQUARE_SIZE * 3}" alt="Gray Truck">`);
-    const orangeTruck = $(`<img src="images/orangeTruck.png" class="cars" width="${SQUARE_SIZE}" height="${SQUARE_SIZE * 3}" alt="Orange Truck">`);
-    const yellowTruck = $(`<img src="images/yellowTruck.png" class="cars" width="${SQUARE_SIZE}" height="${SQUARE_SIZE * 3}" alt="Yellow Truck">`);
-    const lightGreenCar = $(`<img src="images/lightGreenCar.png" class="cars" width="${SQUARE_SIZE}" height="${SQUARE_SIZE * 2}" alt="Light Green Car">`);
-    const road = $(`<img src="images/road.png" class="cars" id="road" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="road">`);
+    const road = $(`<img src="images/road.png" class="road" id="road" width="${SQUARE_SIZE * 2}" height="${SQUARE_SIZE}" alt="road">`);
 
+
+    function resizeboard() {
+        SQUARE_SIZE = topBoard.width() / 6;
+        cars.forEach((car) => {
+            if (car.squares.length > 2) {
+                switch (car.alignemnt) {
+                    case 'vertical':
+                        car.image.css({ width: SQUARE_SIZE * 3, height: SQUARE_SIZE });
+                        break;
+                    case 'horizontal':
+                        car.image.css({ width: SQUARE_SIZE, height: SQUARE_SIZE * 3 });
+                        break;
+                }
+            } else {
+                switch (car.alignemnt) {
+                    case 'vertical':
+                        car.image.css({ width: SQUARE_SIZE * 2, height: SQUARE_SIZE });
+                        break;
+                    case 'horizontal':
+                        car.image.css({ width: SQUARE_SIZE, height: SQUARE_SIZE * 2 });
+                        break;
+                }
+            }
+            drawBoard(car);
+            road.css({ width: SQUARE_SIZE * 2, height: SQUARE_SIZE, top: 2 * SQUARE_SIZE, left: 6 * SQUARE_SIZE });
+        });
+    }
+    window.addEventListener('resize', resizeboard);
+    resizeboard();
+
+    fetch("cards.json")
+        .then((result) => {
+            if (!result.ok) {
+                throw new Error("File does not exist");
+            }
+            return result.json();
+        })
+        .then((puzzleArray) => {
+            let currentImg;
+            let currentCarList = [];
+            let puzzleList = [];
+            puzzleArray.forEach((puzzle) => {
+                currentCarList = [];
+                for (let i = 0; i < puzzle.vehicles.length; i++) {
+                    currentImg = $(`<img src=${puzzle.vehicles[i].image} class="cars" width="${puzzle.vehicles[i].width * SQUARE_SIZE}" height="${puzzle.vehicles[i].height * SQUARE_SIZE}" alt="Blue Car">`);
+                    currentCarList.push(new Vehicle(currentImg, puzzle.vehicles[i].alignment, puzzle.vehicles[i].squares));
+                }
+                puzzleList.push(new Puzzle(puzzle.difficulty, puzzle.level, puzzle.cardImage, currentCarList));
+            });
+            puzzleList[2].setUpBoard();
+            // let currentCars = $('.cars');
+            // currentCars.draggable({
+            //     axis: "y"
+            // });
+
+        })
+        .catch(e => console.error(e));
+
+    class Puzzle {
+        constructor(difficulty, level, cardImage, carsList) {
+            this.difficulty = difficulty;
+            this.level = level;
+            this.cardImage = cardImage;
+            this.carsList = carsList;
+        }
+
+        setUpBoard() {
+            cardImg.attr('src', this.cardImage);
+            levelDiv.text("Level " + this.level);
+            this.carsList.forEach((car) => {
+                addVehicle(car);
+            });
+
+        }
+    }
 
     class Vehicle {
-        constructor(image, alignment, squares, redCar) {
+        constructor(image, alignment, squares) {
             this.image = image;
             this.alignemnt = alignment;
             this.squares = squares;
-            this.redCar = redCar;
         }
 
         moveVehicle(direction) {
@@ -90,6 +158,8 @@
                 gameboard.append(`<div class="boardSquare"></div>`);
             }
         }
+        topBoard.append(road);
+        road.css({ top: 2 * SQUARE_SIZE, left: 6 * SQUARE_SIZE });
     }
 
     function checkForCars(row, col) {
@@ -106,9 +176,10 @@
 
     function setBorder() {
         cars.forEach((car) => {
+            console.log(car);
             car.image.css({ border: "none" });
         });
-        currentCar.image.css({ border: '4px solid black' });
+        currentCar.image.css({ border: '4px solid rgb(60, 168, 168)' });
     }
 
     function drawBoard(car) {
@@ -120,6 +191,10 @@
         cars.push(car);
         topBoard.append(car.image);
         drawBoard(car);
+        car.image.click(() => {
+            currentCar = car;
+            setBorder();
+        });
     }
 
     function moveSelected() {
@@ -138,25 +213,6 @@
         setBorder();
     }
 
-
-    let myCar = new Vehicle(blueCar, 'vertical', [{ row: 0, col: 1 }, { row: 0, col: 2 }], false);
-    let myCar2 = new Vehicle(orangeCar, 'vertical', [{ row: 3, col: 3 }, { row: 3, col: 4 }], false);
-    let myRedCar = new Vehicle(redCar, 'vertical', [{ row: 2, col: 1 }, { row: 2, col: 2 }], true);
-    let myCar3 = new Vehicle(lightGreenCar, 'horizontal', [{ row: 2, col: 0 }, { row: 3, col: 0 }], false);
-    let myTruck = new Vehicle(grayTruck, 'horizontal', [{ row: 0, col: 3 }, { row: 1, col: 3 }, { row: 2, col: 3 }], false);
-    let myTruck2 = new Vehicle(orangeTruck, 'horizontal', [{ row: 3, col: 2 }, { row: 4, col: 2 }, { row: 5, col: 2 }], false);
-    let myTruck3 = new Vehicle(yellowTruck, 'horizontal', [{ row: 1, col: 5 }, { row: 2, col: 5 }, { row: 3, col: 5 }], false);
-    let myCar4 = new Vehicle(greenCar, 'vertical', [{ row: 5, col: 3 }, { row: 5, col: 4 }], false);
-    addVehicle(myCar);
-    addVehicle(myCar2);
-    addVehicle(myCar3);
-    addVehicle(myTruck);
-    addVehicle(myTruck2);
-    addVehicle(myTruck3);
-    addVehicle(myRedCar);
-    addVehicle(myCar4);
-    topBoard.append(road);
-    road.css({ top: 2 * SQUARE_SIZE, left: 6 * SQUARE_SIZE });
     document.addEventListener('keydown', e => {
         if (currentCar) {
             switch (e.key) {
@@ -172,12 +228,7 @@
         }
     });
 
-    cars.forEach((car) => {
-        car.image.click(() => {
-            currentCar = car;
-            setBorder();
-        });
-    });
+
 
     setUpBoard();
 

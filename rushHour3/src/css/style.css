@@ -35,8 +35,8 @@ main {
 
 #cardSelector{
     width: 15%;
-    position: absolute;
-    left: 8%;
+    position: fixed;
+    left: 78%;
     top: 30%;
     text-align: center;
 }
@@ -59,6 +59,7 @@ main {
 #container{
     position: relative;
     margin-top: 3%;
+    left: -15%;
 }
 
 #boardBackground{ 
@@ -109,6 +110,37 @@ main {
 
 #road{
     z-index: 2;
+}
+
+.sliderButtons{
+    width: 100%;
+    margin: auto;
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 3fr 1fr 3fr;
+    justify-items: center;
+    background-color: white;
+}
+
+.sliderButtons button{
+    background-color: rgb(60, 168, 168);
+    color: rgb(76, 71, 71);
+    font-size: 16px;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    width: 85%;
+    text-align: center;
+}
+
+.sliderButtons h2 {
+    text-align: center;
+    color: rgb(60, 168, 168);
+    border: 1px solid rgb(60, 168, 168);
+    padding: 12px 10px;
+    background-color: rgb(76, 71, 71);
+    width: 30px;
 }
 
 @media screen and (max-width: 2200px) {
